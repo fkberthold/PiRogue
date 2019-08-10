@@ -1,0 +1,11 @@
+module utilities.
+
+clear_screen() =>
+    command(clear) = _.
+
+get_ch() = Ch =>
+    command("stty -echo") = _,
+    command("stty raw") = _,
+    Ch = read_char(),
+    command("stty cooked") = _,
+    command("stty echo") = _.

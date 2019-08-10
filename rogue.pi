@@ -1,0 +1,13 @@
+import util.
+import utilities.
+
+screen_height = 22.
+screen_width = 75.
+
+get_screen(PlayerPosition) = Screen =>
+    $coord(PX, PY) = PlayerPosition,
+    Screen = [[cond((PX=SX,PY=SY),'@','.') : SX in 1..screen_width()]
+                                    : SY in 1..screen_height()].
+
+display_screen(Screen) = ScreenStr =>
+    ScreenStr = join(Screen, "\n").
