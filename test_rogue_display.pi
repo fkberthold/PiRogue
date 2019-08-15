@@ -1,0 +1,27 @@
+import unittest.
+import rogue_display.
+import rogue_data.
+
+small_world() = World =>
+    World = init_game(),
+    World.get(world).put(message, "Welcome to PiRogue."),
+    World.get(world).put(screen_width, 4),
+    World.get(world).put(screen_height, 3),
+    World.get(world).put(rooms, [$room($coord(1,1), $coord(4,3))]).
+
+main =>
+     fun_test(get_simple_message, equal, $get_message(small_world()), "Welcome to PiRogue."),
+     fun_test(get_status_value_single, equal, $get_status_value("Gold", 10, 7), "Gold: 10     "),
+     fun_test(get_status_value_pair, equal, $get_status_value("HP", 13, 15, 8), "HP: 13(15)  "),
+     fun_test(curr_max_set_different, equal, $curr_max_set(13, 15), "13(15)"),
+     fun_test(get_status_line, equal, $get_status(small_world()),
+                               "Level: 1  Gold: 9      Hp: 10(15)   Str: 14(16) Arm: 5  Exp: 3/37"),
+     fun_test(get_char_at_coord_player, equal, $get_char_at_coord(small_world(), $coord(2,2)), '@'),
+     fun_test(get_small_world, equal, $get_dungeon_level(small_world()), ["----", "|@.|", "----"]),
+     fun_test(get_full_game_screen, equal, $get_screen(small_world()),
+                               ["Welcome to PiRogue.",
+                                "----",
+                                "|@.|",
+                                "----",
+                                "Level: 1  Gold: 9      Hp: 10(15)   Str: 14(16) Arm: 5  Exp: 3/37"]),
+     fun_test(display_small_world, equal, $display_screen(["----", "|@.|", "----"]), "----\n|@.|\n----").

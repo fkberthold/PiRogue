@@ -1,0 +1,26 @@
+module rogue_data.
+
+screen_height = 22.
+screen_width = 75.
+
+world_state = new_map([screen_height=screen_height(),
+                      screen_width=screen_width(),
+                      player_position=$coord(2,2),
+                      dungeon_level=1,
+                      message="",
+                      rooms=[$room($coord(1,1), $coord(screen_width(), screen_height()))]]).
+
+player_state = new_map([gold=9,
+                        max_hit_points=15,
+                        current_hit_points=10,
+                        max_strength=16,
+                        current_strength=14,
+                        armor=5,
+                        player_level=3,
+                        player_experience=37]).
+
+init_game = Game =>
+    Player = player_state(),
+    World = world_state(),
+    Game = new_map([player=Player,
+                    world=World]).

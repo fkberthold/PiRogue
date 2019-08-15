@@ -1,0 +1,24 @@
+module unittest.
+import basic.
+
+pred_test(Name, Verification, Function) => true.
+
+fun_test(Name, Verification, Function, Expected) =>
+    print(Name),
+    Actual = apply(Function),
+    if (Verification = equal) then
+        Pass = (Actual = Expected)
+    else
+        printf(": No Verification Type '%s'\n", to_string(Verification))
+    end,
+    if (Pass) then
+        println(": PASS")
+    else
+        println(": FAIL"),
+        println(new_list(20, '-')),
+        printf("    Function: %s with %s\n", to_string(Function), to_string(Verification)),
+        printf("    Expected: %s\n", to_string(Expected)),
+        printf("    Actual:   %s\n", to_string(Actual))
+    end.
+       
+

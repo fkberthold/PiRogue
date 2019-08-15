@@ -1,0 +1,106 @@
+import rogue_data.
+import sat.
+import util.
+import utilities.
+
+room_constraint(Rooms, coord(X, Y), Ord) =>
+    /* Constraint defines if a room is being displayed
+     */
+    % TODO: This repitition of defining what each type is is messy
+    Player = ord('@'),
+    Floor = ord('.'),
+    HorizWall = ord('-'),
+    VertWall = ord('|'),
+    foreach($room($coord(LowerLeftX, LowerLeftY), $coord(UpperRightX, UpperRightY)) in Rooms)
+        if ((Y = LowerLeftY; Y = UpperRightY), X >= LowerLeftX, X <= UpperRightX) then 
+            Ord #= HorizWall
+        elseif ((X = LowerLeftX; X = UpperRightX), Y > LowerLeftY, Y < UpperRightY) then
+            Ord #= VertWall
+        elseif (X > LowerLeftX, X < UpperRightX, Y > LowerLeftY, Y < UpperRightY) then
+            Ord :: [Floor,Player]
+        end 
+    end.
+
+player_constraint(PlayerCoord, Coord, Ord) =>
+    /* Constraint defines if a player is at the coordinate
+     */
+    % TODO: This repitition of defining what each type is is messy
+    Player = ord('@'),
+    if(PlayerCoord = Coord) then
+        Ord #= Player
+    else
+        Ord #!= Player
+    end.
+
+get_char_at_coord(Game, Coord) = Char =>
+    /* Given the game state and a coordinate, determine
+     *  what character should appear at that coordinate
+     */
+    $coord(X, Y) = Coord,
+    Player = ord('@'),
+    Floor = ord('.'),
+    HorizWall = ord('-'),
+    VertWall = ord('|'),
+    Symbols = [Player, Floor, HorizWall, VertWall],
+    Ord :: Symbols,
+    player_constraint(Game.get(world).get(player_position), Coord, Ord),
+    room_constraint(Game.get(world).get(rooms), Coord, Ord),
+    [Solution|_] = solve_all(Ord),
+    Char = chr(Solution).
+
+get_dungeon_level(Game) = Level =>
+    /* Given a Game state, return a list of strings that represents
+     *  the current dungeon level.
+     */
+    $coord(PX, PY) = Game.get(world).get(player_position),
+    MaxWidth = Game.get(world).get(screen_width),
+    MaxHeight = Game.get(world).get(screen_height),
+    Level = reverse([[get_char_at_coord(Game, $coord(SX, SY))
+                                              : SX in 1..MaxWidth]
+                                              : SY in 1..MaxHeight]).
+
+get_message(Game) = Message =>
+    /* Get the string value for the current message to the player,
+     *  this can be used to:
+     *  * announce events: monster attack, level up
+     *  * get input: Query what direction you're firing, what potion you're drinking
+     */
+    Message = Game.get(world).get(message).
+
+curr_max_set(Curr, Max) = Combined =>
+    /* Helper for get_status that formats a current value and a max
+     *  value to look like "Curr(Max)" eg "13(15)"
+     */
+    Combined = to_string(Curr) ++ "(" ++ to_string(Max) ++ ")".
+
+get_status_value(Label, Value, Spaces) = Status =>
+    /* Get and format an individual value for the status bar, giving it
+     *  appropriate spacing.
+     */
+    Status = to_fstring("%s: %-" ++ to_string(Spaces) ++ "s", Label, to_string(Value)).
+
+get_status_value(Label, Curr, Max, Spaces) = Status =>
+    /* Get and format an a paired current and maximum value for the status bar,
+     *  giving them appropriate spacing.
+     */
+    Status = to_fstring("%s: %-" ++ to_string(Spaces) ++ "s", Label, curr_max_set(Curr, Max)).
+
+get_status(Game) = Status =>
+    /* Generate the status line for the bottom of the game area.
+     */ 
+    World = Game.get(world),
+    Player = Game.get(player),
+    Level = get_status_value("Level", World.get(dungeon_level), 3),
+    Gold = get_status_value("Gold", Player.get(gold), 7),
+    HitPoints = get_status_value("Hp", Player.get(current_hit_points), Player.get(max_hit_points), 9),
+    Strength = get_status_value("Str", Player.get(current_strength), Player.get(max_strength), 7),
+    Armor = get_status_value("Arm", Player.get(armor), 3),
+    Experience = "Exp: " ++ to_string(Player.get(player_level)) ++ "/"
+                         ++  to_string(Player.get(player_experience)),
+    Status = Level ++ Gold ++ HitPoints ++ Strength ++  Armor ++ Experience.
+
+get_screen(Game) = Output =>
+    Output = [get_message(Game)] ++ get_dungeon_level(Game) ++ [get_status(Game)].
+
+display_screen(Screen) = ScreenStr =>
+    ScreenStr = join(Screen, "\n").
