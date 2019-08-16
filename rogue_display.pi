@@ -32,32 +32,34 @@ player_constraint(PlayerCoord, Coord, Ord) =>
         Ord #!= Player
     end.
 
-get_char_at_coord(Game, Coord) = Char =>
+get_char_at_coord(Game, Coord, Ord) =>
     /* Given the game state and a coordinate, determine
      *  what character should appear at that coordinate
      */
     $coord(X, Y) = Coord,
-    Player = ord('@'),
-    Floor = ord('.'),
-    HorizWall = ord('-'),
-    VertWall = ord('|'),
-    Symbols = [Player, Floor, HorizWall, VertWall],
-    Ord :: Symbols,
     player_constraint(Game.get(world).get(player_position), Coord, Ord),
-    room_constraint(Game.get(world).get(rooms), Coord, Ord),
-    [Solution|_] = solve_all(Ord),
-    Char = chr(Solution).
+    room_constraint(Game.get(world).get(rooms), Coord, Ord).
 
 get_dungeon_level(Game) = Level =>
     /* Given a Game state, return a list of strings that represents
      *  the current dungeon level.
      */
     $coord(PX, PY) = Game.get(world).get(player_position),
+    Player = ord('@'),
+    Floor = ord('.'),
+    HorizWall = ord('-'),
+    VertWall = ord('|'),
+    Symbols = [Player, Floor, HorizWall, VertWall],
     MaxWidth = Game.get(world).get(screen_width),
     MaxHeight = Game.get(world).get(screen_height),
-    Level = reverse([[get_char_at_coord(Game, $coord(SX, SY))
-                                              : SX in 1..MaxWidth]
-                                              : SY in 1..MaxHeight]).
+    OrdLevel = new_array(MaxHeight, MaxWidth),
+    OrdLevel :: Symbols,
+    foreach (SX in 1..MaxWidth, SY in 1..MaxHeight)
+            get_char_at_coord(Game, $coord(SX, SY), OrdLevel[SY, SX])
+    end,
+    [Solution|_] = solve_all(OrdLevel),
+    Level = reverse([[chr(Ord) : Ord in Row] : Row in Solution]).
+%    Char = chr(Solution).
 
 get_message(Game) = Message =>
     /* Get the string value for the current message to the player,

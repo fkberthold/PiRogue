@@ -1,0 +1,15 @@
+import rogue_data.
+import rogue_display.
+import utilities.
+
+game_loop(State) =>
+    Char = a,
+    while(Char != q)
+      Screen = display_screen(get_screen(State)),
+      clear_screen(),
+      println(Screen),
+      Char := get_ch()
+    end.
+
+main =>
+    game_loop(init_game()).

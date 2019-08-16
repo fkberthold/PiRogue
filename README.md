@@ -42,6 +42,17 @@ It's starting to at least look like rogue. I'm creating a set of structures that
 I'm using the constraint system to display the screen. I still need to move the character around, but that should
 be pretty easy, I think I'll try to have it behave correctly with walls too.
 
+#### 2019-08-16
+
+I've found that debugging this code can be a serious nightmare because circumstances that would
+cause an exception in other languages simply evaluate to `no.` So I've put together a seriously
+adhoc unittest system. For now it only works on equality on function returns, but since I'm
+already expanding out my predicates, including predicates that are using constraints, I'm going
+to have to expand it.
+
+On the plus side, I have a game loop, the character still doesn't move, but you can run the game
+with `picat rogue.pi` and exit the loop with `q`.
+
 ### Step 4 - The map: TODO
 ### Step 5 - Saving/Loading: TODO
 ### Step 6 - It's alive! Alive!: TODO

@@ -16,7 +16,6 @@ main =>
      fun_test(curr_max_set_different, equal, $curr_max_set(13, 15), "13(15)"),
      fun_test(get_status_line, equal, $get_status(small_world()),
                                "Level: 1  Gold: 9      Hp: 10(15)   Str: 14(16) Arm: 5  Exp: 3/37"),
-     fun_test(get_char_at_coord_player, equal, $get_char_at_coord(small_world(), $coord(2,2)), '@'),
      fun_test(get_small_world, equal, $get_dungeon_level(small_world()), ["----", "|@.|", "----"]),
      fun_test(get_full_game_screen, equal, $get_screen(small_world()),
                                ["Welcome to PiRogue.",
