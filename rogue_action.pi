@@ -1,0 +1,94 @@
+import utilities.
+
+/* PREDICATE FACT: input_action
+ * Align user inputs to the intended action.
+ *
+ * PARAMETERS
+ * Character: char
+ *   The user input from a keyboard.
+ * Action: structure
+ *   The resulting action. Current valid actions include:
+ *      move(Direction): Move the player in a given Direction.
+ */
+index (+,-)
+input_action('k', move(n)).
+input_action('u', move(ne)).
+input_action('l', move(e)).
+input_action('n', move(se)).
+input_action('j', move(s)).
+input_action('b', move(sw)).
+input_action('h', move(w)).
+input_action('y', move(nw)).
+
+/* FUNCTION FACT: direction_transform
+ * Given a direction and current coordinates,
+ *   returns the new coordinates.
+ * Note: I'd considered making this a reversable predicate, but
+ *    Any solution I came up with was horribly inefficient, and
+ *    this is a very frequently used function.
+ *
+ * PARAMETERS
+ * Direction: atom
+ *   The direction to move in: n, ne, e, se, s, sw, w, nw
+ * Origin: $coord(X, Y)
+ *   Coordinates to transform.
+ * RETURN:
+ *   Target: $coord(X, Y)
+ *   The Coord shifted in the Direction given.
+ */
+direction_transform(n, coord(X, Y)) = new_struct(coord, [X, Y + 1]).
+direction_transform(ne, coord(X, Y)) = new_struct(coord, [X + 1, Y + 1]).
+direction_transform(e, coord(X, Y)) = new_struct(coord, [X + 1, Y]).
+direction_transform(se, coord(X, Y)) = new_struct(coord, [X + 1, Y - 1]).
+direction_transform(s, coord(X, Y)) = new_struct(coord, [X, Y - 1]).
+direction_transform(sw, coord(X, Y)) = new_struct(coord, [X - 1, Y - 1]).
+direction_transform(w, coord(X, Y)) = new_struct(coord, [X - 1, Y]).
+direction_transform(nw, coord(X, Y)) = new_struct(coord, [X - 1, Y + 1]).
+
+/* Predicate: on_floor
+ * Determine if the given set of coordinates is on the floor somewhere
+ *  in the current level.
+ *
+ * PARAMETERS
+ * RoomList: list of $room
+ *   The list of all of the rooms in the game.
+ * Coord: $coord(X, Y)
+ *   A set of coordinates.
+ */
+on_floor([], _) => false.
+on_floor([Room|Rooms], coord(X, Y)) =>
+    Room = $room($coord(LowerLeftX, LowerLeftY),$coord(UpperRightX, UpperRightY)),
+    if (X > LowerLeftX, X < UpperRightX, Y > LowerLeftY, Y < UpperRightY) then
+        true
+    else
+        on_floor(Rooms, $coord(X, Y))
+    end.
+
+/* Function: do_action
+ * Perform a transformation on the game state based on a given
+ *   action. There's a bit more game logic in here than I'd like.
+ *   I'd rather book keeping like which actions are possible be
+ *   kept elsewhere.
+ *
+ * PARAMETERS
+ * State: map
+ *   The current game state.
+ * Action: a struct
+ *   A structure indicating what the current intended action is.
+ * RETURN:
+ * NewState: map
+ *   The state after the action is performed.
+ */
+do_action(State, move(Direction)) = NewState,
+    /* Move the player's character in a direction.
+     */
+    Location = State.get(world).get(player_position),
+    NewLocation = direction_transform(Direction, Location),
+    on_floor(State.get(world).get(rooms), NewLocation) =>
+    State.get(world).put(player_position, NewLocation),
+    NewState = State.
+do_action(State, _) =
+    /* Either the action is unrecognized, or a recognized
+     *  action can't be performed.
+     */
+    State.

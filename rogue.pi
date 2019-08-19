@@ -1,13 +1,27 @@
 import rogue_data.
 import rogue_display.
+import rogue_action.
 import utilities.
 
+/* Predicate: game_loop
+ * This initiates values for game play, draws on the screen,
+ *  recieves player input and repeats.
+ *
+ * PARAMETERS
+ * State: map
+ *   The entire game state for the first turn.
+ */
 game_loop(State) =>
-    Char = a,
+    Screen = display_screen(get_screen(State)),
+    clear_screen(),
+    print(Screen),
+    Char = get_ch(),
     while(Char != q)
-      Screen = display_screen(get_screen(State)),
-      clear_screen(),
-      println(Screen),
+      (input_action(Char, Action);Action=rest),
+      State := do_action(State, Action),
+      Screen := display_screen(get_screen(State)),
+      cursor_home(),
+      print(Screen),
       Char := get_ch()
     end.
 

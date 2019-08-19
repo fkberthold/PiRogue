@@ -1,8 +1,28 @@
 module utilities.
 
+/* Predicate: cursor_home
+ * Return the cursor to the top left of the
+ *  screen, this lets us re-draw over the
+ *  existing map.
+ */
+cursor_home() =>
+      print([chr(27)|"[0;0H"]).
+
+/* Predicate: clear_screen
+ * Clear's the screen, returning the cursor to
+ *  the top. Note that this is expensive to use
+ *  as a refresh, and leads to flicker.
+ */
 clear_screen() =>
     command(clear) = _.
 
+/* Predicate: get_ch
+ * Reads in a single character without waiting
+ *  for a newline.
+ * NOTE: This will _not_ work on Windows, there
+ *  doesn't seem to be any equivalent to stty for
+ *  Windows.
+ */
 get_ch() = Ch =>
     command("stty -echo") = _,
     command("stty raw") = _,

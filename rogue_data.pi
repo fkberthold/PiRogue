@@ -3,6 +3,8 @@ module rogue_data.
 screen_height = 22.
 screen_width = 75.
 
+/* The state of the game world as a whole
+ */ 
 world_state = new_map([screen_height=screen_height(),
                       screen_width=screen_width(),
                       player_position=$coord(2,2),
@@ -10,6 +12,9 @@ world_state = new_map([screen_height=screen_height(),
                       message="",
                       rooms=[$room($coord(1,1), $coord(screen_width(), screen_height()))]]).
 
+/* The players current state, including statistics and (eventually)
+ *  inventory.
+ */
 player_state = new_map([gold=9,
                         max_hit_points=15,
                         current_hit_points=10,
@@ -19,6 +24,13 @@ player_state = new_map([gold=9,
                         player_level=3,
                         player_experience=37]).
 
+/* Function: init_game
+ * Create an initial game state by combining player state & world state.
+ *
+ * RETURN
+ * Game: map
+ *   The complete game state for the initial turn.
+ */
 init_game = Game =>
     Player = player_state(),
     World = world_state(),

@@ -34,7 +34,7 @@ While doing this I wanted to test that the two main interactions worked:
 This was a bit more complicated than I'd planned on. You can find my solutions to both of these problems (made with the help
 of the kind folks at the [Picat Forum](https://groups.google.com/forum/#!forum/picat-lang).
 
-### Step 3 - It's a boy!: IN PROGRESS
+### Step 3 - It's a boy!: DONE | Tag: Step3
 
 #### 2019-08-15
 
@@ -52,6 +52,30 @@ to have to expand it.
 
 On the plus side, I have a game loop, the character still doesn't move, but you can run the game
 with `picat rogue.pi` and exit the loop with `q`.
+
+#### 2019-08-19
+
+We have motion! The `@` can now be moved around using the standard rogue keys:
+
+```
+Y K U
+ \|/
+H- -L
+ /|\
+B J N
+```
+
+And walls will block movement. The code for the walls was surprisingly much harder to figure out
+how to write, and much simpler once completed than I'd expected, and it should extend fairly well
+as I expand out to having doors & hallways.
+
+The other challenge that I discovered during this process was that there was a noticeable (> 0.1 sec)
+flicker each time the screen refreshed. It would seem that clearing the screen is moderatley
+expensive.  To mitigate this instead of clearing the screen each move I'm moving the cursor to
+the top of the screen using an ASCII command sequence. I have no idea how well this will port
+across systems, but it seems to work well enough in Cygwin.
+
+Alright, bagging and tagging this one. On to generating maps.
 
 ### Step 4 - The map: TODO
 ### Step 5 - Saving/Loading: TODO

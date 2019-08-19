@@ -3,9 +3,18 @@ import sat.
 import util.
 import utilities.
 
+/* PREDICATE: room_constraint
+ * Constraint defines if a room is being displayed
+ *
+ * PARAMETERS
+ * Rooms: list of $room
+ *   The list of all of the rooms in the game.
+ * Coord: $coord(X, Y)
+ *   A set of coordinates
+ * Ord: int
+ *   The ordinal value of the character to be displayed to screen.
+ */
 room_constraint(Rooms, coord(X, Y), Ord) =>
-    /* Constraint defines if a room is being displayed
-     */
     % TODO: This repitition of defining what each type is is messy
     Player = ord('@'),
     Floor = ord('.'),
@@ -21,9 +30,18 @@ room_constraint(Rooms, coord(X, Y), Ord) =>
         end 
     end.
 
+/* Predicate: player_constraint
+ * Constraint defines if a player is at the coordinate
+ *
+ * PARAMETERS
+ * PlayerCoord: $coord(X, Y)
+ *   The coordinates of the player's character.
+ * Coord: $coord(X, Y)
+ *   A set of coordinates.
+ * Ord: int
+ *   The ordinal value of the character to be displayed to screen.
+ */
 player_constraint(PlayerCoord, Coord, Ord) =>
-    /* Constraint defines if a player is at the coordinate
-     */
     % TODO: This repitition of defining what each type is is messy
     Player = ord('@'),
     if(PlayerCoord = Coord) then
@@ -32,18 +50,35 @@ player_constraint(PlayerCoord, Coord, Ord) =>
         Ord #!= Player
     end.
 
+/* Predicate: get_char_at_coord
+ * Constraint that given the game state and a coordinate, determine
+ *   what character should appear at that coordinate.
+ *  
+ * PARAMETERS
+ * Game: map
+ *   The full state of the current game.
+ * Coord: $coord(X, Y)
+ *   A set of coordinates.
+ * Ord: int
+ *   The ordinal value of the character to be displayed to screen.
+ */
 get_char_at_coord(Game, Coord, Ord) =>
-    /* Given the game state and a coordinate, determine
-     *  what character should appear at that coordinate
-     */
     $coord(X, Y) = Coord,
     player_constraint(Game.get(world).get(player_position), Coord, Ord),
     room_constraint(Game.get(world).get(rooms), Coord, Ord).
 
+/* Function: get_dungeon_level
+ * Given a Game state, return a list of strings that represents
+ *  the current dungeon level.
+ *
+ * PARAMETERS
+ * Game: map
+ *   The full state of the current game.
+ * RETURN: list of strings
+ *   A list of strings, each of which represents a row of the
+ *    image of the dungeon level to be displayed on screen.
+ */
 get_dungeon_level(Game) = Level =>
-    /* Given a Game state, return a list of strings that represents
-     *  the current dungeon level.
-     */
     $coord(PX, PY) = Game.get(world).get(player_position),
     Player = ord('@'),
     Floor = ord('.'),
@@ -59,39 +94,94 @@ get_dungeon_level(Game) = Level =>
     end,
     [Solution|_] = solve_all(OrdLevel),
     Level = reverse([[chr(Ord) : Ord in Row] : Row in Solution]).
-%    Char = chr(Solution).
 
+/* Function: get_message
+ * Get the string value for the current message to the player,
+ *  this can be used to:
+ *  * announce events: monster attack, level up
+ *  * get input: Query what direction you're firing, what potion you're drinking
+ *
+ * PARAMETERS
+ * Game: map
+ *   The full state of the current game.
+ * RETURN: string
+ *   The message to be displayed to the user, left padded with spaces to fix
+ *    some display issues.
+ */
 get_message(Game) = Message =>
-    /* Get the string value for the current message to the player,
-     *  this can be used to:
-     *  * announce events: monster attack, level up
-     *  * get input: Query what direction you're firing, what potion you're drinking
-     */
-    Message = Game.get(world).get(message).
+    GameMessage = Game.get(world).get(message),
+    Width = Game.get(world).get(screen_width),
+    Message = GameMessage ++ new_list(Width - len(GameMessage), ' ').
 
+/* Function: curr_max_set
+ * Helper for get_status that formats a current value and a max
+ *  value to look like "Curr(Max)" eg "13(15)"
+ *
+ * PARAMETERS
+ * Curr: int
+ *   The current value for a stat that can change. Example, a character's
+ *     current health level as opposed to their max health.
+ * Max: int
+ *   The maximum value of a stat that can change.
+ * RETURN: string
+ *   A string in the form "Curr(Max)" eg "13(15)"
+ */
 curr_max_set(Curr, Max) = Combined =>
-    /* Helper for get_status that formats a current value and a max
-     *  value to look like "Curr(Max)" eg "13(15)"
-     */
     Combined = to_string(Curr) ++ "(" ++ to_string(Max) ++ ")".
 
+/* Function: get_status_value/3
+ * Get and format an individual value for the status bar, giving it
+ *  padding on the right side.
+ *
+ * PARAMETERS
+ * Label: string
+ *   The name of the value being displayed, ie "Level"
+ * Value: int
+ *   The value to be displayed, ie "4"
+ * Spaces: int
+ *   The number of spaces to follow with, this is to keep the
+ *    values from running all together when they're concatenated.
+ * RETURN: string
+ *   The formated value, ie, "Level: 4   "
+ */
 get_status_value(Label, Value, Spaces) = Status =>
-    /* Get and format an individual value for the status bar, giving it
-     *  appropriate spacing.
-     */
     Status = to_fstring("%s: %-" ++ to_string(Spaces) ++ "s", Label, to_string(Value)).
 
+/* Function: get_status_value/4
+ * Get and format an a paired current and maximum value for the status bar,
+ *  giving them padding on the right side.
+ *
+ * PARAMETERS
+ * Label: string
+ *   The name of the value being displayed, ie "Level"
+ * Curr: int
+ *   The current value to be displayed, ie "3"
+ * Max: int
+ *   The maximum value to be displayed, ie "7"
+ * Spaces: int
+ *   The number of spaces to follow with, this is to keep the
+ *    values from running all together when they're concatenated.
+ * RETURN: string
+ *   The formated value, ie, "Str: 3(7)     "
+ */
 get_status_value(Label, Curr, Max, Spaces) = Status =>
-    /* Get and format an a paired current and maximum value for the status bar,
-     *  giving them appropriate spacing.
-     */
     Status = to_fstring("%s: %-" ++ to_string(Spaces) ++ "s", Label, curr_max_set(Curr, Max)).
 
+/* Function: get_status
+ * Generate the status line for the bottom of the game area.
+ *
+ * PARAMETERS
+ * Game: map
+ *   The full state of the current game.
+ * RETURN: string
+ *   A single line of text that indicates the player characters
+ *    status, including which dungeon level they are on and thier
+ *    various stats.
+ */ 
 get_status(Game) = Status =>
-    /* Generate the status line for the bottom of the game area.
-     */ 
     World = Game.get(world),
     Player = Game.get(player),
+    Width = World.get(screen_width),
     Level = get_status_value("Level", World.get(dungeon_level), 3),
     Gold = get_status_value("Gold", Player.get(gold), 7),
     HitPoints = get_status_value("Hp", Player.get(current_hit_points), Player.get(max_hit_points), 9),
@@ -99,10 +189,34 @@ get_status(Game) = Status =>
     Armor = get_status_value("Arm", Player.get(armor), 3),
     Experience = "Exp: " ++ to_string(Player.get(player_level)) ++ "/"
                          ++  to_string(Player.get(player_experience)),
-    Status = Level ++ Gold ++ HitPoints ++ Strength ++  Armor ++ Experience.
+    Text = Level ++ Gold ++ HitPoints ++ Strength ++  Armor ++ Experience,
+    % Adding the screen width to the end can help clear artificats left because we
+    %  don't fully clear the screen every time.
+    Status = Text ++ new_list(Width - len(Text), ' ').
 
+/* Function: get_screen
+ * Generate a list of strings with the screen to be displayed for the current
+ *  turn in the game.
+ *
+ * PARAMETERS
+ * Game: map
+ *   The full state of the current game.
+ * RETURN: list of strings
+ *   A list of strings, each string is a row in the display.
+ */
 get_screen(Game) = Output =>
     Output = [get_message(Game)] ++ get_dungeon_level(Game) ++ [get_status(Game)].
 
+/* Function: display_screen
+ * Give the value returned by `get_screen`, combined each of the rows
+ *  to be displayed on screen.
+ *
+ * PARAMETERS
+ * Screen: list of strings
+ *   A list of strings, each string is a row in the display.
+ * RETURN: string
+ *   Each of the strings, concatenated with a newline to make the display for the
+ *    current turn in the game.
+ */
 display_screen(Screen) = ScreenStr =>
     ScreenStr = join(Screen, "\n").
