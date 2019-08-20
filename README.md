@@ -77,7 +77,49 @@ across systems, but it seems to work well enough in Cygwin.
 
 Alright, bagging and tagging this one. On to generating maps.
 
-### Step 4 - The map: TODO
+### Step 4 - The map: PLANNING
+
+#### 2019-08-19
+
+In principle, you can argue there are 2 kinds of space on a Rogue map:
+
+* Rooms
+* Corridors
+
+Where, since Doors are never closed, you can argue that they are just corridors that are adjacent
+to Rooms. Broadly this is true, but functionally it leads to a bunch of special cases, so instead I'm
+going to treat it as though there are 4 kinds of space:
+
+* Rooms
+* Corridors
+* Doors
+* Labyrinths
+
+In any of these it's possible for there to be 'secret doors', I won't worry about distribution of those,
+or randomizing them, if the player searches 1 time within a single motion of a secret door, then they'll
+find it.
+
+While in appearance Labyrinths are represented by the same symbols as Corridors, they tend to have
+different shapes and will certainly be a special case when I get to level generation at Step 12.
+
+So, for this map I'll endeavor to have (I may have more because I decide it looks good):
+
+* 2 rooms, one with a secret door.
+* One path straight from one room to another (possibly with a turn), one end of which is a secret door.
+* One path that passes through a maze between the rooms.
+* One path that deadends.
+
+I'm going to have to deal with some slightly odd rules regarding diagonal motion. While you can make a diagonal motion through empty space you can't make a diagonal motion when there is an object adjacent to where you are and where you want to go. So, the Player can't move to the 'door' here in one move, the have to go north then east.
+
+```
+...|
+...+
+..@|
+...|
+```
+
+In addition to the structures that affect movement within a level, there is also the starcases that affect's movement between levels, and traps that have status effects. I'll add one of each of those, but won't worry about the stairs until Step 12 and the traps at Step 7. Though I'll add them to the list of things that are invisible until they are seen either by walking on them or searching for them.
+
 ### Step 5 - Saving/Loading: TODO
 ### Step 6 - It's alive! Alive!: TODO
 ### Step 7 - Interaction: TODO
