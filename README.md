@@ -77,7 +77,7 @@ across systems, but it seems to work well enough in Cygwin.
 
 Alright, bagging and tagging this one. On to generating maps.
 
-### Step 4 - The map: PLANNING
+### Step 4 - The map: IN PROGRESS
 
 #### 2019-08-19
 
@@ -119,6 +119,25 @@ I'm going to have to deal with some slightly odd rules regarding diagonal motion
 ```
 
 In addition to the structures that affect movement within a level, there is also the starcases that affect's movement between levels, and traps that have status effects. I'll add one of each of those, but won't worry about the stairs until Step 12 and the traps at Step 7. Though I'll add them to the list of things that are invisible until they are seen either by walking on them or searching for them.
+
+#### 2019-09-16
+
+I may have been a bit ambitious in my previous posting. Here's what we have as of this moment:
+
+* Rooms
+* Corridors
+* Doors
+
+The player is able to move through all of these and can't move across diagonals.
+
+What I still need to implement:
+* Secret Doors
+* Stairs
+* Traps
+* Labyrinths
+* The ability to 'search'
+
+The good news is that the actual time to implement what I have added wasn't too bad. Debugging continues to be a nuissance that I don't have a full grasp of. The biggest pain for that continues to be name typos that the compiler just accepts as being either new atoms or variables. There has to be a way to deal with that.
 
 ### Step 5 - Saving/Loading: TODO
 ### Step 6 - It's alive! Alive!: TODO
