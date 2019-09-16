@@ -84,6 +84,44 @@ in_corridor([Corridor|Corridors], Coord) =>
         in_corridor(Corridors, Coord)
     end.
 
+/* Predicate: open_space
+ * Determine if the given set of coordinates is in a space that can be
+ *  moved to.
+ *
+ * PARAMETERS
+ * World: map
+ *   The map of the world as it stands.
+ * Point: $coord(X, Y)
+ *  A set of coordinates.
+ */
+open_space(World, Point@coord(X, Y)) =>
+    RoomList = World.get(rooms),
+    CorridorList = World.get(corridors),
+    (in_corridor(CorridorList, Point);on_floor(RoomList, Point)).
+
+/* Predicate: clear_corner
+ * Determine if the movement between two coordinates is diagonal
+ *  and is crossing a non-passable space. For example, if the
+ *  player is next to a wall, and trying to move diagonally
+ *  into a door, or if the player is in a corridor and trying
+ *  to move diagonally around a corner. This will be true if both
+ *  diagonals are clear, and false otherwise.
+ *
+ * PARAMETERS
+ * Start: $coord(X, Y)
+ *   The start location of the player.
+ * Target: $coord(X, Y)
+ *   The target location of the player.
+ * World: map
+ *   The map of the world as it stands.
+ */
+clear_corner(Start@coord(StartX, StartY), Target@coord(TargetX, TargetY),
+                World) =>
+    Corner1 = $coord(StartX, TargetY),
+    Corner2 = $coord(TargetX, StartY),
+    open_space(World, Corner1),
+    open_space(World, Corner2).
+
 /* Function: do_action
  * Perform a transformation on the game state based on a given
  *   action. There's a bit more game logic in here than I'd like.
@@ -104,8 +142,9 @@ do_action(State, move(Direction)) = NewState,
      */
     Location = State.get(world).get(player_position),
     NewLocation = direction_transform(Direction, Location),
-    (on_floor(State.get(world).get(rooms), NewLocation);
-     in_corridor(State.get(world).get(corridors), NewLocation)) =>
+    World = State.get(world),
+    (open_space(World, NewLocation),
+     clear_corner(Location, NewLocation, World)) =>
     State.get(world).put(player_position, NewLocation),
     NewState = State.
 do_action(State, _) =
