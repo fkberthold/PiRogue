@@ -64,6 +64,26 @@ on_floor([Room|Rooms], coord(X, Y)) =>
         on_floor(Rooms, $coord(X, Y))
     end.
 
+/* Predicate: in_floor
+ * Determine if the given set of coordinates is in a corridor somewhere
+ *  in the current level.
+ *
+ * PARAMETERS
+ * CorridorList: list of $corridor
+ *   The list of all of the corridors in the game.
+ * Coord: $coord(X, Y)
+ *   A set of coordinates.
+ */
+in_corridor([], _) => false.
+in_corridor([Corridor|Corridors], Coord) =>
+    Room = $room($coord(LowerLeftX, LowerLeftY),$coord(UpperRightX, UpperRightY)),
+    Corridor = $corridor(Start, End),
+    if (on_line(Coord, Start, End)) then
+        true
+    else
+        in_corridor(Corridors, Coord)
+    end.
+
 /* Function: do_action
  * Perform a transformation on the game state based on a given
  *   action. There's a bit more game logic in here than I'd like.
@@ -84,7 +104,8 @@ do_action(State, move(Direction)) = NewState,
      */
     Location = State.get(world).get(player_position),
     NewLocation = direction_transform(Direction, Location),
-    on_floor(State.get(world).get(rooms), NewLocation) =>
+    (on_floor(State.get(world).get(rooms), NewLocation);
+     in_corridor(State.get(world).get(corridors), NewLocation)) =>
     State.get(world).put(player_position, NewLocation),
     NewState = State.
 do_action(State, _) =

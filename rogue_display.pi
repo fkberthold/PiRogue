@@ -1,5 +1,5 @@
 import rogue_data.
-import sat.
+import cp.
 import util.
 import utilities.
 
@@ -14,20 +14,75 @@ import utilities.
  * Ord: int
  *   The ordinal value of the character to be displayed to screen.
  */
-room_constraint(Rooms, coord(X, Y), Ord) =>
+room_constraint(Rooms, coord(X, Y), Ord) ?=>
     % TODO: This repitition of defining what each type is is messy
     Player = ord('@'),
     Floor = ord('.'),
+    Door = ord('+'),
     HorizWall = ord('-'),
     VertWall = ord('|'),
-    foreach($room($coord(LowerLeftX, LowerLeftY), $coord(UpperRightX, UpperRightY)) in Rooms)
+    ((member($room($coord(LowerLeftX, LowerLeftY), $coord(UpperRightX, UpperRightY)), Rooms),
         if ((Y = LowerLeftY; Y = UpperRightY), X >= LowerLeftX, X <= UpperRightX) then 
-            Ord #= HorizWall
+            Ord :: [HorizWall, Door]
         elseif ((X = LowerLeftX; X = UpperRightX), Y > LowerLeftY, Y < UpperRightY) then
-            Ord #= VertWall
+            Ord :: [VertWall, Door]
         elseif (X > LowerLeftX, X < UpperRightX, Y > LowerLeftY, Y < UpperRightY) then
-            Ord :: [Floor,Player]
-        end 
+            Ord :: [Floor, Player]
+        else
+            false
+        end);
+        Ord notin [Door, HorizWall, VertWall]).
+
+/* PREDICATE: on_line/3
+ * Predicate evalutes true if the first coordinate is on the line
+ *  between the second and third coordinates.  This assumes that
+ *  the line is either straight horizontal or vertical because all
+ *  lines in Rogue are one of the two.
+ *
+ * PARAMETERS
+ * Coord: $coord(X, Y)
+ *   A set of coordinates
+ * Start: $coord(X, Y)
+ *   The Start/End distinction is arbitrary, this is one end of a line.
+ * End: $coord(X, Y)
+ *   The Start/End distinction is arbitrary, this is one end of a line.
+ */
+on_line(Point@coord(X, Y), Start@coord(X1, Y1), End@coord(X2, Y2)) =>
+    [Xmin, Xmax] = sort([X1, X2]),
+    [Ymin, Ymax] = sort([Y1, Y2]),
+    Xdist = Xmax - Xmin,
+    Ydist = Ymax - Ymin,
+    if(Xdist = 0) then
+        Xmax = X,
+        Ymin <= Y, Y <= Ymax,
+    elseif(Ydist = 0) then
+        Ymax = Y,
+        Xmin <= X, X <= Xmax,
+    else
+        throw $error(coord_line_not_orthogonal, Start, End)
+    end.
+
+/* PREDICATE: corridor_constraint/3
+ * Constraint defines if a corridor or door is being displayed,
+ *  where a door is where a corridor meets a room.
+ *
+ * PARAMETERS
+ * Corridors: list of $corridor
+ *   The list of all of the rooms in the game.
+ * Point: $coord(X, Y)
+ *   A set of coordinates
+ * Ord: int
+ *   The ordinal value of the character to be displayed to screen.
+ */
+corridor_constraint(Corridors, Point@coord(X, Y), Ord) ?=>
+    Player = ord('@'),
+    Door = ord('+'),
+    Corridor = ord('#'),
+    if (member($corridor(Start, End), Corridors),
+                      on_line(Point, Start, End)) then
+        Ord :: [Door, Player, Corridor]
+    else
+        Ord notin [Door, Corridor]
     end.
 
 /* Predicate: player_constraint
@@ -41,13 +96,11 @@ room_constraint(Rooms, coord(X, Y), Ord) =>
  * Ord: int
  *   The ordinal value of the character to be displayed to screen.
  */
-player_constraint(PlayerCoord, Coord, Ord) =>
+player_constraint(PlayerCoord, Coord, Ord) ?=>
     % TODO: This repitition of defining what each type is is messy
     Player = ord('@'),
     if(PlayerCoord = Coord) then
         Ord #= Player
-    else
-        Ord #!= Player
     end.
 
 /* Predicate: get_char_at_coord
@@ -63,9 +116,9 @@ player_constraint(PlayerCoord, Coord, Ord) =>
  *   The ordinal value of the character to be displayed to screen.
  */
 get_char_at_coord(Game, Coord, Ord) =>
-    $coord(X, Y) = Coord,
-    player_constraint(Game.get(world).get(player_position), Coord, Ord),
-    room_constraint(Game.get(world).get(rooms), Coord, Ord).
+    corridor_constraint(Game.get(world).get(corridors), Coord, Ord),
+    room_constraint(Game.get(world).get(rooms), Coord, Ord),
+    player_constraint(Game.get(world).get(player_position), Coord, Ord).
 
 /* Function: get_dungeon_level
  * Given a Game state, return a list of strings that represents
@@ -80,11 +133,14 @@ get_char_at_coord(Game, Coord, Ord) =>
  */
 get_dungeon_level(Game) = Level =>
     $coord(PX, PY) = Game.get(world).get(player_position),
-    Player = ord('@'),
-    Floor = ord('.'),
-    HorizWall = ord('-'),
-    VertWall = ord('|'),
-    Symbols = [Player, Floor, HorizWall, VertWall],
+    Empty = ord(' '), %32
+    Player = ord('@'), %64
+    Floor = ord('.'), %46
+    HorizWall = ord('-'), %45
+    VertWall = ord('|'), %124
+    Corridor = ord('#'), %35
+    Door = ord('+'), %43
+    Symbols = [Empty, Floor, Player, HorizWall, VertWall, Corridor, Door],
     MaxWidth = Game.get(world).get(screen_width),
     MaxHeight = Game.get(world).get(screen_height),
     OrdLevel = new_array(MaxHeight, MaxWidth),
@@ -92,8 +148,8 @@ get_dungeon_level(Game) = Level =>
     foreach (SX in 1..MaxWidth, SY in 1..MaxHeight)
             get_char_at_coord(Game, $coord(SX, SY), OrdLevel[SY, SX])
     end,
-    [Solution|_] = solve_all(OrdLevel),
-    Level = reverse([[chr(Ord) : Ord in Row] : Row in Solution]).
+    solve(OrdLevel),
+    Level = reverse([[chr(Ord) : Ord in Row] : Row in OrdLevel]).
 
 /* Function: get_message
  * Get the string value for the current message to the player,

@@ -7,10 +7,16 @@ screen_width = 75.
  */ 
 world_state = new_map([screen_height=screen_height(),
                       screen_width=screen_width(),
-                      player_position=$coord(2,2),
+                      player_position=$coord(5,5),
                       dungeon_level=1,
                       message="",
-                      rooms=[$room($coord(1,1), $coord(screen_width(), screen_height()))]]).
+                      rooms=[$room($coord(3,2), $coord(20, 8)),
+                             $room($coord(40, 15), $coord(60, 20)),
+                             $room($coord(45, 2), $coord(53, 10))],
+                      corridors=[$corridor($coord(48, 10), $coord(48, 15)),
+                                 $corridor($coord(20, 4), $coord(26, 4)),
+                                 $corridor($coord(26, 4), $coord(26, 8)),
+                                 $corridor($coord(26, 8), $coord(45, 8))]]).
 
 /* The players current state, including statistics and (eventually)
  *  inventory.
